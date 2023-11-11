@@ -203,7 +203,7 @@ def build_camp(site, coord_df):
   
     if not hs_df.empty:
         # case management for malaria
-        if coord_df.at[site, 'CM_filepath'] == 'case_management/sapone_cm.csv':
+        if site == 'sapone_2018':
             add_sapone_hs(camp,hs_df)
         else:    
             add_hfca_hs(camp, hs_df)
