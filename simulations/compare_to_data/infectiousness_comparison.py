@@ -47,7 +47,8 @@ def prepare_infectiousness_comparison_single_site(sim_df, site):
     ref_df = ref_df[ref_df['Site'].str.lower() == str(site).lower()]
     ref_df['Site'] = ref_df['Site'].str.lower()
     ref_months = ref_df['month'].unique()
-    print(ref_df)
+    
+    
     # remove simulation rows with zero pop
     sim_df = sim_df[sim_df['Pop'] > 0]
     min_yr = np.min(sim_df['year'])
@@ -72,33 +73,44 @@ def prepare_infectiousness_comparison_single_site(sim_df, site):
             .reset_index()
         
     # standardize column names and merge simulation and reference data frames
-    min_yr = np.min(ref_df['year'])
-    ref_df['year'] = ref_df['year']-min_yr+1
-    ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
-    #ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
-    ref_df = ref_df[["freq_frac_infect", "agebin", "densitybin", f"raction_infected_bin", "Site", "month", "site_month",
+    #print(ref_df.columns)
+    #print(("year" in ref_df.columns))
+    
+    if "year" in ref_df.columns:
+        print(f"A: {site}")
+        min_yr = np.min(ref_df['year'])
+        ref_df['year'] = ref_df['year']-min_yr+1
+        print(ref_df)
+    if not "year" in ref_df.columns:
+        print(f"B: {site}")
+        ref_df.insert(0,'year',1)
+        print(ref_df)
+  
+    #ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
+    ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
+    ref_df = ref_df[["freq_frac_infect", "agebin", "densitybin", "fraction_infected_bin", "Site", "month", "site_month",
                      "num_in_group", "count"]]
     ref_df.rename(columns={"freq_frac_infect": "reference",
                            "num_in_group": "ref_total",
                            "count": "ref_bin_count"},
                   inplace=True)
 
-    sim_df_by_param_set["site_month"] = sim_df_by_param_set['Site'] + '_year' + sim_df_by_param_set['year'].astype('str') + '_month' + sim_df_by_param_set['month'].astype('str')
-    #sim_df_by_param_set["site_month"] = sim_df_by_param_set['Site'] + '_month' + sim_df_by_param_set['month'].astype('str')
+    #sim_df_by_param_set["site_month"] = sim_df_by_param_set['Site'] + '_year' + sim_df_by_param_set['year'].astype('str') + '_month' + sim_df_by_param_set['month'].astype('str')
+    sim_df_by_param_set["site_month"] = sim_df_by_param_set['Site'] + '_month' + sim_df_by_param_set['month'].astype('str')
     sim_df_by_param_set.rename(columns={"infectiousness_bin_freq": "simulation",
                                         "infectiousness_bin": "fraction_infected_bin"},
                                inplace=True)
   
     ref_df['agebin'] = [int(x) for x in ref_df['agebin']]
     sim_df_by_param_set['agebin'] = [int(x) for x in sim_df_by_param_set['agebin']]
-    print(ref_df)
-    print(sim_df_by_param_set)
+    #print(ref_df)
+    #print(sim_df_by_param_set)
     #print(ref_df.columns)
     #print(sim_df_by_param_set.columns)
     #fixme - Note we are dropping nans in both reference and simulation.  Dropping nans in simulation might not be best
     combined_df = pd.merge(sim_df_by_param_set, ref_df, how='inner')#.dropna(subset=["reference"])#, "simulation"])
     combined_df['metric'] = 'infectiousness'
-    print(combined_df)
+    #print(combined_df)
     #fixme - Fudge to correct for sim infectiousness values of 1s and 0s (often because of small denominator)
     #fixme - which wreak havoc in likelihoods.  So instead set a range from [0.001,0.999], given typical population size
     #fixme - of 1000 individuals.
@@ -151,7 +163,7 @@ def identify_missing_parameter_sets(combined_df, numOf_param_sets):
     return combined_df, missing_param_sets
     
 def compute_infectiousness_LL_by_site(site,numOf_param_sets):
-    print(site)
+    #print(site)
     sim_df = pd.read_csv(os.path.join(manifest.simulation_output_filepath, site, "infectiousness_by_age_density_month.csv"))
     #print(sim_df)
     combined_df = prepare_infectiousness_comparison_single_site(sim_df, site)
