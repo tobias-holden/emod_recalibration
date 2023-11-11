@@ -60,15 +60,18 @@ def prepare_gametocyte_prevalence_comparison_single_site(sim_df, site):
     # Take mean over Run Number
     # sim_df = sim_df.groupby(["sample_number", "site", "Age", "p_detect_case"])\
     # sim_df = sim_df.groupby("Age").agg({"prevalence": "mean"}).reset_index()
-
-
     # Load reference data
     filepath_ref = os.path.join(manifest.base_reference_filepath,
                                 coord_csv[coord_csv['site'] == site]['age_gametocyte_prevalence_ref'].iloc[0])
     ref_df = pd.read_csv(filepath_ref)
     ref_df = ref_df[ref_df['Site'].str.lower() == site.lower()]
+    # print("REF DF")
+    # print(ref_df)
     min_yr = np.min(ref_df['year'])
+    print(min_yr)
     ref_df['year'] = ref_df['year']-min_yr+1
+    #print("REF DF")
+    #print(ref_df)
     if 'variable' in ref_df.columns:
         ref_df = ref_df[ref_df['variable']=='gametocytes'].reset_index()
     if 'agebin' in ref_df.columns:
@@ -109,12 +112,14 @@ def prepare_gametocyte_prevalence_comparison_single_site(sim_df, site):
 
     # format reference data
     ref_df['Site'] = ref_df['Site'].str.lower()
-    ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
+    ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
+    #ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
     ref_df.rename(columns={"prevalence": "reference", "year": "ref_year"}, inplace=True)
     ref_df = ref_df[["reference", "mean_age", "Site", "month", "site_month", "total_sampled", "num_pos", "ref_year"]]
     
     ref_df['ref.Trials'] = ref_df['total_sampled']
     ref_df['ref.Observations'] = ref_df['num_pos']
+    print("REFDF")
     print(ref_df)
     # format new simulation output
     # get simulation average across seeds
@@ -124,16 +129,19 @@ def prepare_gametocyte_prevalence_comparison_single_site(sim_df, site):
         #prevalence=('prevalence', np.nanmean), 
         "prevalence":"mean", "Pop":"mean"
     }).reset_index()
-    
     sim_df['Site'] = sim_df['Site'].str.lower()
-    sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
+    
+    sim_df["site_month"] = sim_df['Site'] + '_month' + sim_df['month'].astype('str')
+    #sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
     sim_df.rename(columns={"prevalence": "simulation"}, inplace=True)
     sim_df = sim_df[["param_set", "simulation", "mean_age", "Site", "site_month","Pop"]]
     
     sim_df['Pop'].replace(0.0,np.nan,inplace=True)
     sim_df['sim.Trials'] = sim_df['Pop']
     sim_df['sim.Observations'] = sim_df['Pop']*sim_df['simulation']
+    print("SIMDF")
     print(sim_df)
+    #print(sim_df)
     # check that ages match between reference and simulation. if there is a small difference (<1 year, update simulation)
     # fixme - match_sim_ref_ages is currently copied over from the validation framework and it generates an additional
     # fixme - dataframe bench_df that we don't care about right now
@@ -149,6 +157,7 @@ def prepare_gametocyte_prevalence_comparison_single_site(sim_df, site):
 
     combined_df = pd.merge(ref_df, sim_df, on=['mean_age', 'site_month', 'Site'], how='inner')
     combined_df['metric'] = 'gametocyte_prevalence'
+
 
     #fixme - Fudge to correct for sim infectiousness values of 1s and 0s (often because of small denominator)
     #fixme - which wreak havoc in likelihoods.  So instead set a range from [0.001,0.999], given typical population size
@@ -189,7 +198,7 @@ def compute_gametocyte_prevalence_likelihood(combined_df):
     combined_df["ll"] = binom_ll(combined_df["num_pos"],
                                  combined_df["total_sampled"],
                                  combined_df["simulation"])
-    print(combined_df)                             
+    #print(combined_df)                             
     return combined_df["ll"].sum()
 
 def compute_gametocyte_prevalence_likelihood2(combined_df):
@@ -198,8 +207,8 @@ def compute_gametocyte_prevalence_likelihood2(combined_df):
         df['ref.Observations'] + df['sim.Observations'] + 1) + gammaln(
         df['ref.Trials'] - df['ref.Observations'] + df['sim.Trials'] - df['sim.Observations'] + 1) - gammaln(df['ref.Observations'] + 1) - gammaln(
         df['ref.Trials'] - df['ref.Observations'] + 1) - gammaln(df['sim.Observations'] + 1) - gammaln(df['sim.Trials'] - df['sim.Observations'] + 1)
-    # print(ll)
-    return ll.sum(skipna=True)# mean
+    #print(ll)
+    return ll.sum(skipna=True)#mean
     
     
 # The following function determines whether any parameters sets were missing for a site,
@@ -219,8 +228,12 @@ def compute_gametocyte_prev_LL_by_site(site, numOf_param_sets):
     
     sim_df = pd.read_csv(os.path.join(manifest.simulation_output_filepath, site, "prev_inc_by_age_month.csv"))
     combined_df = prepare_gametocyte_prevalence_comparison_single_site(sim_df, site)
-
-    ll_by_param_set = combined_df.groupby("param_set") \
+    
+    
+    print("COMB DF")
+    print(combined_df)
+    
+    ll_by_param_set = combined_df.groupby("param_set",group_keys=False) \
         .apply(compute_gametocyte_prevalence_likelihood2) \
         .reset_index() \
         .rename(columns={0: "ll"})
@@ -228,7 +241,7 @@ def compute_gametocyte_prev_LL_by_site(site, numOf_param_sets):
     ll_by_param_set, missing_param_sets = identify_missing_parameter_sets(ll_by_param_set, numOf_param_sets)
   
     ll_by_param_set["site"] = site
-    ll_by_param_set["metric"] = "gametocyte_prevalence"
+    ll_by_param_set["metric"] = "gametocyte prevalence"
     
     if len(missing_param_sets) > 0:
         print(f'Warning {site} is missing param_sets {missing_param_sets} for gametocyte prevalence')
@@ -268,7 +281,6 @@ def plot_gametocyte_prevalence_comparison_single_site(site, param_sets_to_plot=N
     plt.title(site)
     plt.legend()
     plt.tight_layout()
-    #plt.savefig(os.path.join(manifest.simulation_output_filepath, "_plots", f"gametocyte_prevalence_{site}.png"))
     plt.savefig(os.path.join(plt_dir,f"gametocyte_prevalence_{site}.png"))
 
 def plot_gametocyte_prevalence_comparison_all_sites(param_sets_to_plot=None,plt_dir=os.path.join(manifest.simulation_output_filepath, "_plots")):
@@ -277,5 +289,5 @@ def plot_gametocyte_prevalence_comparison_all_sites(param_sets_to_plot=None,plt_
 
 
 if __name__=="__main__":
-    #plot_prevalence_comparison_all_sites()
+    #plot_gametocyteprevalence_comparison_all_sites()
     print(compute_gametocyte_prev_LL_for_all_sites())
