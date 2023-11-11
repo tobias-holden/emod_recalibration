@@ -41,13 +41,13 @@ def prepare_parasite_density_comparison_single_site(sim_df, site):
     upper_ages = sorted(sim_df['agebin'].unique())
     sim_df['mean_age'] = sim_df['agebin'].apply(get_mean_from_upper_age, upper_ages=upper_ages)
     if "level_1" in sim_df.columns:
-        print("is In")
+        #print("is In")
         age_agg_sim_df = sim_df.groupby("param_set")\
             .apply(get_age_bin_averages)\
             .reset_index() \
             .drop(columns="level_1")
     else:
-        print(" not in")
+        #print(" not in")
         age_agg_sim_df = sim_df.groupby("param_set")\
             .apply(get_age_bin_averages)\
             .reset_index()
@@ -100,30 +100,38 @@ def prepare_parasite_density_comparison_single_site(sim_df, site):
         .drop(columns="index")
 
 
-    # format reference data
-    #ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
-    min_yr = np.min(ref_df['year'])
-    ref_df['year'] = ref_df['year']-min_yr+1
-    ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
-    ref_df_asex = ref_df[["asexual_par_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month", "year"
+    # # format reference data
+    # if "year" in ref_df.columns:
+    #     print(f"A: {site}")
+    #     min_yr = np.min(ref_df['year'])
+    #     ref_df['year'] = ref_df['year']-min_yr+1
+    #     print(ref_df)
+    # if not "year" in ref_df.columns:
+    #     print(f"B: {site}")
+    #     ref_df.insert(0,'year',1)
+    #     print(ref_df)
+    
+    ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
+    #ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
+    ref_df_asex = ref_df[["asexual_par_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month",
                           "site_month", "bin_total_asex", "count_asex"]] \
         .rename(columns={"asexual_par_dens_freq": "reference",
                          "bin_total_asex": "ref_total",
                          "count_asex": "ref_bin_count"})
-    ref_df_gamet = ref_df[["gametocyte_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month","year",
+    ref_df_gamet = ref_df[["gametocyte_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month",
                            "site_month", "bin_total_gamet", "count_gamet"]] \
         .rename(columns={"gametocyte_dens_freq": "reference",
                          "bin_total_gamet": "ref_total",
                          "count_gamet": "ref_bin_count"})
 
     # format new simulation output
-    min_yr = np.min(sim_df['year'])
-    sim_df['year'] = sim_df['year']-min_yr+1
-    #sim_df["site_month"] = sim_df['Site'] + '_month' + sim_df['month'].astype('str')
-    sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
-    sim_df_asex = sim_df[["param_set", "asexual_par_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month", "site_month"]] \
+    # min_yr = np.min(sim_df['year'])
+    # sim_df['year'] = sim_df['year']-min_yr+1
+    sim_df["site_month"] = sim_df['Site'] + '_month' + sim_df['month'].astype('str')
+    #sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
+    sim_df_asex = sim_df[["param_set", "asexual_par_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month","site_month"]] \
         .rename(columns={"asexual_par_dens_freq": "simulation"})
-    sim_df_gamet = sim_df[["param_set", "gametocyte_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month", "site_month"]] \
+    sim_df_gamet = sim_df[["param_set", "gametocyte_dens_freq", "mean_age", "agebin", "densitybin", "Site", "month","site_month"]] \
         .rename(columns={"gametocyte_dens_freq": "simulation"})
 
     # combine reference and simulation dataframes
