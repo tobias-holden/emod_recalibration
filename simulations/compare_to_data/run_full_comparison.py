@@ -18,19 +18,19 @@ from simulations.compare_to_data.age_gamotocyte_prevalence_comparison import com
 from simulations.compare_to_data.no_blood_comparison import compute_dead_LL_for_all_sites
 
 def compute_LL_across_all_sites_and_metrics(numOf_param_sets = 64):
-    #infectious_LL = compute_infectious_LL_for_all_sites(numOf_param_sets)
-    #density_LL = compute_parasite_density_LL_for_all_sites(numOf_param_sets)
+    infectious_LL = compute_infectious_LL_for_all_sites(numOf_param_sets)
+    density_LL = compute_parasite_density_LL_for_all_sites(numOf_param_sets)
     prevalence_LL = compute_prev_LL_for_all_sites(numOf_param_sets)
-    #gametocyte_prevalence_LL = compute_gametocyte_prev_LL_for_all_sites(numOf_param_sets)
-    #incidence_LL = compute_inc_LL_for_all_sites(numOf_param_sets)
-    #dead_LL = compute_dead_LL_for_all_sites(numOf_param_sets)
+    gametocyte_prevalence_LL = compute_gametocyte_prev_LL_for_all_sites(numOf_param_sets)
+    incidence_LL = compute_inc_LL_for_all_sites(numOf_param_sets)
+    dead_LL = compute_dead_LL_for_all_sites(numOf_param_sets)
 
 
     #density_LL_w=density_LL
     #density_LL_w['ll'] = [float(val)/10 for val in density_LL['ll']]
     #print(density_LL_w)
-    #combined = pd.concat([infectious_LL, density_LL, prevalence_LL, incidence_LL, dead_LL, gametocyte_prevalence_LL])
-    combined = pd.concat([prevalence_LL])
+    combined = pd.concat([infectious_LL, density_LL, prevalence_LL, incidence_LL, dead_LL, gametocyte_prevalence_LL])
+    #combined = pd.concat([prevalence_LL])
     print(combined.to_string())
 
     #fixme - Eventually, this will need to be fancier way of weighting LL across the diverse metrics/sites
