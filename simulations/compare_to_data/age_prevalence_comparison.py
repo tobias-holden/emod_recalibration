@@ -110,8 +110,8 @@ def prepare_prevalence_comparison_single_site(sim_df, site):
 
     # format reference data
     ref_df['Site'] = ref_df['Site'].str.lower()
-    #ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
-    ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
+    ref_df["site_month"] = ref_df['Site'] + '_month' + ref_df['month'].astype('str')
+    #ref_df["site_month"] = ref_df['Site'] + '_year' + ref_df['year'].astype('str') + '_month' + ref_df['month'].astype('str')
     ref_df.rename(columns={"prevalence": "reference", "year": "ref_year"}, inplace=True)
     ref_df = ref_df[["reference", "mean_age", "Site", "month", "site_month", "total_sampled", "num_pos", "ref_year"]]
     
@@ -129,8 +129,8 @@ def prepare_prevalence_comparison_single_site(sim_df, site):
     }).reset_index()
     sim_df['Site'] = sim_df['Site'].str.lower()
     
-    #sim_df["site_month"] = sim_df['Site'] + '_month' + sim_df['month'].astype('str')
-    sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
+    sim_df["site_month"] = sim_df['Site'] + '_month' + sim_df['month'].astype('str')
+    #sim_df["site_month"] = sim_df['Site'] + '_year' + sim_df['year'].astype('str') + '_month' + sim_df['month'].astype('str')
     sim_df.rename(columns={"prevalence": "simulation"}, inplace=True)
     sim_df = sim_df[["param_set", "simulation", "mean_age", "Site", "site_month","Pop"]]
     
